@@ -45,14 +45,15 @@ public class BuildBeginInfo {
 
     public BuildBeginInfo(String projectName, AbstractBuild<?, ?> build, NotificationConfig config){
         //获取请求参数
-        List<ParametersAction> parameterList = build.getActions(ParametersAction.class);
-        if(parameterList!=null && parameterList.size()>0){
-            for(ParametersAction p : parameterList){
-                for(ParameterValue pv : p.getParameters()){
-                    this.params.put(pv.getName(), pv.getValue());
-                }
-            }
-        }
+//        List<ParametersAction> parameterList = build.getActions(ParametersAction.class);
+//        if(parameterList!=null && parameterList.size()>0){
+//            for(ParametersAction p : parameterList){
+//                for(ParameterValue pv : p.getParameters()){
+//                    this.params.put(pv.getName(), pv.getValue());
+//                }
+//            }
+//        }
+        this.params.put("Branch", build.getBuildVariables().get("gitlabBranch"));
         //预计时间
         if(build.getProject().getEstimatedDuration()>0){
             this.durationTime = build.getProject().getEstimatedDuration();

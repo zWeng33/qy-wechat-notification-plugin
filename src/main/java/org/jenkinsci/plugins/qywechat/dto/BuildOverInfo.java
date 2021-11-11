@@ -51,14 +51,15 @@ public class BuildOverInfo {
 
     public BuildOverInfo(String projectName, Run<?, ?> run, NotificationConfig config){
         //获取请求参数
-        List<ParametersAction> parameterList = run.getActions(ParametersAction.class);
-        if(parameterList!=null && parameterList.size()>0){
-            for(ParametersAction p : parameterList){
-                for(ParameterValue pv : p.getParameters()){
-                    this.params.put(pv.getName(), pv.getValue());
-                }
-            }
-        }
+//        List<ParametersAction> parameterList = run.getActions(ParametersAction.class);
+//        if(parameterList!=null && parameterList.size()>0){
+//            for(ParametersAction p : parameterList){
+//                for(ParameterValue pv : p.getParameters()){
+//                    this.params.put(pv.getName(), pv.getValue());
+//                }
+//            }
+//        }
+        this.params.put("Branch", run.getEnvVars().get("gitlabBranch"));
         //使用时间
         this.useTimeString = run.getTimestampString();
         //控制台地址

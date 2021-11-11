@@ -62,7 +62,9 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
         if(StringUtils.isEmpty(config.webhookUrl)){
             return true;
         }
-        this.projectName = build.getProject().getFullDisplayName();
+        String description = build.getProject().getDescription();
+        String displayName = build.getProject().getFullDisplayName();
+        this.projectName = StringUtils.isNotEmpty(description) ? description : displayName;
         BuildBeginInfo buildInfo = new BuildBeginInfo(this.projectName, build, config);
 
         String req = buildInfo.toJSONString();
@@ -92,9 +94,10 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
 
         //设置当前项目名称
         if(run instanceof AbstractBuild){
-            this.projectName = run.getParent().getFullDisplayName() ;
+            String description = run.getParent().getDescription();
+            String displayName = run.getParent().getFullDisplayName();
+            this.projectName = StringUtils.isNotEmpty(description) ? description : displayName;
         }
-
         //构建结束通知
         BuildOverInfo buildInfo = new BuildOverInfo(this.projectName, run, config);
 
