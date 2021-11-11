@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.qywechat.dto;
 
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import org.jenkinsci.plugins.qywechat.NotificationUtil;
 import org.jenkinsci.plugins.qywechat.model.NotificationConfig;
 import hudson.model.Result;
@@ -8,6 +10,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,6 +18,11 @@ import java.util.Map;
  * @author jiaju
  */
 public class BuildOverInfo {
+
+    /**
+     * 请求参数
+     */
+    private Map params = new HashMap<String, Object>();
 
     /**
      * 使用时间，毫秒
@@ -42,6 +50,15 @@ public class BuildOverInfo {
     private Result result;
 
     public BuildOverInfo(String projectName, Run<?, ?> run, NotificationConfig config){
+        //获取请求参数
+        List<ParametersAction> parameterList = run.getActions(ParametersAction.class);
+        if(parameterList!=null && parameterList.size()>0){
+            for(ParametersAction p : parameterList){
+                for(ParameterValue pv : p.getParameters()){
+                    this.params.put(pv.getName(), pv.getValue());
+                }
+            }
+        }
         //使用时间
         this.useTimeString = run.getTimestampString();
         //控制台地址
@@ -71,12 +88,27 @@ public class BuildOverInfo {
     }
 
     public String toJSONString(){
+        //参数组装
+        StringBuffer paramBuffer = new StringBuffer();
+        params.forEach((key, val)->{
+            paramBuffer.append(key);
+            paramBuffer.append("=");
+            paramBuffer.append(val);
+            paramBuffer.append(", ");
+        });
+        if(paramBuffer.length()==0){
+            paramBuffer.append("无");
+        }else{
+            paramBuffer.deleteCharAt(paramBuffer.length()-2);
+        }
+
         //组装内容
         StringBuilder content = new StringBuilder();
         if(StringUtils.isNotEmpty(topicName)){
             content.append(this.topicName);
         }
         content.append("<font color=\"info\">【" + this.projectName + "】</font>构建" + getStatus() + "\n");
+        content.append(" >构建参数：<font color=\"comment\">" + paramBuffer.toString() + "</font>\n");
         content.append(" >构建用时：<font color=\"comment\">" +  this.useTimeString + "</font>\n");
         if(StringUtils.isNotEmpty(this.consoleUrl)) {
             content.append(" >[查看控制台](" + this.consoleUrl + ")");
