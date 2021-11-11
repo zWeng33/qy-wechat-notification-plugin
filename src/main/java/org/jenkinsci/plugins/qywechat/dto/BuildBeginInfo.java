@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.qywechat.dto;
 
+import hudson.EnvVars;
 import org.jenkinsci.plugins.qywechat.NotificationUtil;
 import org.jenkinsci.plugins.qywechat.model.NotificationConfig;
 import hudson.model.AbstractBuild;
@@ -43,17 +44,14 @@ public class BuildBeginInfo {
      */
     private String topicName = "";
 
-    public BuildBeginInfo(String projectName, AbstractBuild<?, ?> build, NotificationConfig config){
-        //获取请求参数
-//        List<ParametersAction> parameterList = build.getActions(ParametersAction.class);
-//        if(parameterList!=null && parameterList.size()>0){
-//            for(ParametersAction p : parameterList){
-//                for(ParameterValue pv : p.getParameters()){
-//                    this.params.put(pv.getName(), pv.getValue());
-//                }
-//            }
-//        }
-        this.params.put("Branch", build.getBuildVariables().get("gitlabBranch"));
+    /**
+     * 构建分支
+     */
+    private String branch;
+
+    public BuildBeginInfo(String projectName, AbstractBuild<?, ?> build, EnvVars envVars, NotificationConfig config){
+        // 构建分支
+        this.branch = envVars.get("gitlabBranch");
         //预计时间
         if(build.getProject().getEstimatedDuration()>0){
             this.durationTime = build.getProject().getEstimatedDuration();
@@ -83,20 +81,6 @@ public class BuildBeginInfo {
     }
 
     public String toJSONString(){
-        //参数组装
-        StringBuffer paramBuffer = new StringBuffer();
-        params.forEach((key, val)->{
-            paramBuffer.append(key);
-            paramBuffer.append("=");
-            paramBuffer.append(val);
-            paramBuffer.append(", ");
-        });
-        if(paramBuffer.length()==0){
-            paramBuffer.append("无");
-        }else{
-            paramBuffer.deleteCharAt(paramBuffer.length()-2);
-        }
-
         //耗时预计
         String durationTimeStr = "无";
         if(durationTime>0){
@@ -110,7 +94,7 @@ public class BuildBeginInfo {
             content.append(this.topicName);
         }
         content.append("<font color=\"info\">【" + this.projectName + "】</font>开始构建\n");
-        content.append(" >构建参数：<font color=\"comment\">" + paramBuffer.toString() + "</font>\n");
+        content.append(" >构建分支：<font color=\"comment\">" + this.branch + "</font>\n");
         content.append(" >预计用时：<font color=\"comment\">" +  durationTimeStr + "</font>\n");
         if(StringUtils.isNotEmpty(this.consoleUrl)){
             content.append(" >[查看控制台](" + this.consoleUrl + ")");

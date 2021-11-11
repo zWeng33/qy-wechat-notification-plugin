@@ -79,6 +79,14 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         config.failNotify = failNotify;
     }
 
+    public boolean isStartBuild() {
+        return config.startBuild;
+    }
+
+    public void setStartBuild(boolean startBuild) {
+        config.startBuild = startBuild;
+    }
+
     public String getProxyHost() {
         return config.proxyHost;
     }
@@ -130,6 +138,7 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         unsaveConfig.proxyPassword = config.proxyPassword;
 
         unsaveConfig.failNotify = config.failNotify;
+        unsaveConfig.startBuild = config.startBuild;
         return unsaveConfig;
     }
 

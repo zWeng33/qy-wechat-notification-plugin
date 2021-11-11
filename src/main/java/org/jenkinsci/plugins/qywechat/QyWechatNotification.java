@@ -34,6 +34,8 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
 
     private boolean failNotify;
 
+    private boolean startBuild;
+
     private String projectName;
 
     @Extension
@@ -62,16 +64,19 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
         if(StringUtils.isEmpty(config.webhookUrl)){
             return true;
         }
-        String description = build.getProject().getDescription();
-        String displayName = build.getProject().getFullDisplayName();
-        this.projectName = StringUtils.isNotEmpty(description) ? description : displayName;
-        BuildBeginInfo buildInfo = new BuildBeginInfo(this.projectName, build, config);
 
-        String req = buildInfo.toJSONString();
-        listener.getLogger().println("推送通知" + req);
+        if(!config.startBuild){
+            String description = build.getProject().getDescription();
+            String displayName = build.getProject().getFullDisplayName();
+            this.projectName = StringUtils.isNotEmpty(description) ? description : displayName;
+            BuildBeginInfo buildInfo = new BuildBeginInfo(this.projectName, build, envVars, config);
 
-        //执行推送
-        push(listener.getLogger(), config.webhookUrl, req, config);
+            String req = buildInfo.toJSONString();
+            listener.getLogger().println("推送通知" + req);
+
+            //执行推送
+            push(listener.getLogger(), config.webhookUrl, req, config);
+        }
         return true;
     }
 
@@ -86,7 +91,14 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
      */
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        NotificationConfig config = getConfig(run.getEnvironment(listener));
+        EnvVars envVars;
+        try {
+            envVars = run.getEnvironment(listener);
+        } catch (Exception e) {
+            listener.getLogger().println("读取环境变量异常" + e.getMessage());
+            envVars = new EnvVars();
+        }
+        NotificationConfig config = getConfig(envVars);
         if(StringUtils.isEmpty(config.webhookUrl)){
             return;
         }
@@ -99,7 +111,7 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
             this.projectName = StringUtils.isNotEmpty(description) ? description : displayName;
         }
         //构建结束通知
-        BuildOverInfo buildInfo = new BuildOverInfo(this.projectName, run, config);
+        BuildOverInfo buildInfo = new BuildOverInfo(this.projectName, run, envVars, config);
 
         String req = buildInfo.toJSONString();
         listener.getLogger().println("推送通知" + req);
@@ -177,6 +189,7 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
             config.mentionedMobile = mentionedMobile;
         }
         config.failNotify = failNotify;
+        config.startBuild = startBuild;
         //使用环境变量
         if(config.webhookUrl.contains("$")){
             String val = NotificationUtil.replaceMultipleEnvValue(config.webhookUrl, envVars);
@@ -215,6 +228,11 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
         this.failNotify = failNotify;
     }
 
+    @DataBoundSetter
+    public void setStartBuild(boolean startBuild) {
+        this.startBuild = startBuild;
+    }
+
     public String getWebhookUrl() {
         return webhookUrl;
     }
@@ -229,6 +247,10 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
 
     public boolean isFailNotify() {
         return failNotify;
+    }
+
+    public boolean isStartBuild() {
+        return startBuild;
     }
 }
 
