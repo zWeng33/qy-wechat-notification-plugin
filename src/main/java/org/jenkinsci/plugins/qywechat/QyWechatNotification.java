@@ -65,7 +65,7 @@ public class QyWechatNotification extends Publisher implements SimpleBuildStep {
             return true;
         }
 
-        if(!config.startBuild){
+        if(config.startBuild){
             String description = build.getProject().getDescription();
             String displayName = build.getProject().getFullDisplayName();
             this.projectName = StringUtils.isNotEmpty(description) ? description : displayName;
